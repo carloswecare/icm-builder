@@ -19,8 +19,7 @@ ICM is taught as **three layers** (the Map, the Rooms, the Tools). A fuller rese
   - **Skills / tools wired per workspace.** Skills, MCP servers, and tools referenced only in the workspaces that need them (e.g. a testing skill in `/src`, a humanizer in the writing workspace). Surfaced via an optional **Skills column** in the routing table. This is the plug-and-play model: reference many skills project-wide, but each workspace loads only its own.
   - **Stable reference files ("the factory").** Configured-once rules — brand voice, style guides, design systems — kept in a shared config folder (e.g. `_config/`) and pointed to from `CONTEXT.md` inputs.
 **The formal 5-layer view** (use only when needed): Layer 0 Global Identity + Layer 1 Task Routing both live in `CLAUDE.md`; Layer 2 Stage Contracts = `CONTEXT.md`; Layer 3 Reference Material = the stable "factory" rules; Layer 4 Working Artifacts = run-specific files (transcripts, notes, prior stage outputs) that change every run and live in each stage's `output/`.
- 
-The payoff: the agent loads ~2,000–8,000 tokens per stage instead of 40,000+ in a monolith. Isolation makes outputs focused and reproducible.
+
  
 ### `REFERENCES.md` (optional companion to `CONTEXT.md`)
  
