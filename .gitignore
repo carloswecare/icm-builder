@@ -1,0 +1,28 @@
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+.cache/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Node/Python temp (if applicable)
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Generated files (if building .skill files locally)
+dist/
+build/
+*.skill
