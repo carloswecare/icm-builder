@@ -75,7 +75,7 @@ Explicit contract. ~80% of the file describes the actual work; ≤20% describes 
 - [Audience, tone, length, anything stage-specific.]
 ```
 
-> **Why explicit paths matter:** If you later update `voice.md`, running `grep -r "voice.md" . --include="*.md"` instantly shows every CONTEXT.md that depends on it. Vague references (`"read the config"`) break this. See "Keeping Layer 3 references fresh" in `SKILL.md`.
+> **Why explicit paths matter:** If you later change any referenced file, running `grep -r "[name]" . --include="*.md"` instantly shows everything that depends on it. Vague references (`"read the config"`) break this. See "Post-change dependency check" in `SKILL.md`.
 
 ---
 
@@ -118,36 +118,37 @@ Use inside a workspace when there's enough passive background material that putt
 
 ## 5. `_dependencies.md` template
 
-Maintain this file in every ICM project — small or large. It gives you an explicit reverse map of which CONTEXT.md files depend on which Layer 3 files, so you don't rely on grep alone after a change. On small projects this file is short; that is fine. Place it at the project root alongside `CLAUDE.md`.
+Maintain this file in every ICM project — small or large. It's an explicit reverse map of the dependency graph: each frequently-referenced file listed with what points at it, so you see the blast radius *before* you change something rather than discovering it with grep afterward. Track any file other files depend on — shared configs, contracts, conventions, key upstream outputs — not just Layer 3. On small projects this file is short; that is fine. Place it at the project root alongside `CLAUDE.md`.
 
 ```markdown
-# Layer 3 Dependency Map
+# Dependency Map
 > Last full audit: YYYY-MM-DD
 
-When you update a Layer 3 file, run:
-  grep -r "[filename]" . --include="*.md"
-Then review every CONTEXT.md in the results and update its "Last updated" line.
+Before changing any file listed here, check what depends on it.
+After changing one, run:
+  grep -r "[changed-name]" . --include="*.md"
+Then review every dependent in the results and update its "Last updated" line.
 
 ---
 
 ## _config/voice.md
 Last updated: YYYY-MM-DD — [one-line summary of what changed]
 
-Depends on this file:
+Depended on by:
 - script-lab/01_research/CONTEXT.md
 - script-lab/02_script/CONTEXT.md
 - distribution/CONTEXT.md
 
 ---
 
-## _config/platforms.md
+## script-lab/02_script/output/   (upstream output consumed downstream)
 Last updated: YYYY-MM-DD — [one-line summary of what changed]
 
-Depends on this file:
-- distribution/CONTEXT.md
+Depended on by:
+- production/CONTEXT.md
 ```
 
-> **Keep it short.** One entry per Layer 3 file. No nested checklists — the review happens in the CONTEXT.md files themselves, not here. This file is a lookup, not a task tracker.
+> **Keep it short.** One entry per referenced file. No nested checklists — the review happens in the dependent files themselves, not here. This file is a lookup, not a task tracker.
 
 ---
 

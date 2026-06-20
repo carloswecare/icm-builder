@@ -39,7 +39,7 @@ Follow this order. **Start small** — build one workspace, test it, then iterat
 2. **Write the root `CLAUDE.md` (the Map).** Identity + workspaces + naming conventions + Routing Table. Keep it under 50 lines. Use `references/templates.md`.
 3. **Create `_config/` for Layer 3 reference files** if there are stable rules (voice, style, design). Stub them; the user fills them in.
 4. **Scaffold workspaces and numbered stages.** Each stage folder gets a `CONTEXT.md` and an empty `output/`.
-5. **Write each `CONTEXT.md` (the Rooms).** Explicit Inputs / Process / Outputs. Spend ~80% of the file describing the actual work and constraints; ≤20% on agent persona/behavior. Add a `REFERENCES.md` alongside it if the workspace has substantial passive background material. Include a "Last updated: YYYY-MM-DD" line at the top — it makes staleness visible at a glance. **Name every Layer 3 file explicitly in the Inputs section** (e.g. `../../_config/voice.md`, not just `_config/`) — this naming is what makes grep your dependency graph when references change.
+5. **Write each `CONTEXT.md` (the Rooms).** Explicit Inputs / Process / Outputs. Spend ~80% of the file describing the actual work and constraints; ≤20% on agent persona/behavior. Add a `REFERENCES.md` alongside it if the workspace has substantial passive background material. Include a "Last updated: YYYY-MM-DD" line at the top — it makes staleness visible at a glance. **Name every referenced file explicitly** — Layer 3 configs, upstream stage outputs, anything the stage depends on (e.g. `../../_config/voice.md`, not just `_config/`). Explicit names are what make grep your dependency graph when anything changes.
 6. **Wire Layer 3 where needed.** If using skills/tools, add a fourth **Skills** column to the routing table and reference each skill only in the workspaces that use it. If using stable reference files, point to them from `CONTEXT.md` inputs. A project can do both.
 7. **Test, fail, and update the factory.** When the agent errs, don't just patch the final output — trace the error to the source file (a `CONTEXT.md` or a reference rule) and fix it there. Context files are living documents. **After every change** — whether fixing an error or updating a Layer 3 file — run the post-change dependency check (see "Post-change dependency check" below) before considering the task done.
 
@@ -55,29 +55,27 @@ Read `references/templates.md` for ready-to-use `CLAUDE.md` and `CONTEXT.md` ske
 
 ## Post-change dependency check (run after every change)
 
-Whenever you change **any** file in an ICM project — a Layer 3 reference, a `CONTEXT.md`, a naming convention — run this check before considering the task done. This is not optional and does not depend on project size.
+An ICM project is a graph of files that reference each other: `CLAUDE.md` routes to workspaces, each `CONTEXT.md` names its inputs, stages consume upstream outputs, and contracts cite shared reference files. **Any change to one file can silently stale everything that points at it.** Edit a rule, rename a convention, restructure a stage's outputs — and every file built on the old assumption is now wrong while still reading as correct. The agent keeps following the instruction faithfully; the instruction is just out of date. This is the most common rot pattern in ICM projects, and it gets worse as the project grows.
 
-**Why it matters:** When you update a Layer 3 file (`_config/voice.md`, `_config/standards.md`, etc.), every CONTEXT.md that depends on it is now silently stale. The agent follows the principle correctly — the principle is just out of date. This is the most common rot pattern in ICM projects.
-
-**The mechanism is grep.** Because each CONTEXT.md names its Layer 3 inputs explicitly by filename (Step 5), a single command finds every dependent stage:
+The system is built so you can always trace the blast radius. **Because every reference is named explicitly — by path or filename — the dependency graph is greppable. grep is your dependency tracker.**
 
 ```bash
-grep -r "voice.md" . --include="*.md"
+grep -r "[changed-name]" . --include="*.md"
 ```
 
-Every result is a CONTEXT.md you must review.
+Every result is a file that may depend on what you changed. Review each one.
 
-**Post-change protocol — mandatory after every change:**
+**Post-change protocol — mandatory after every change, on every project regardless of size:**
 
-1. Identify what you changed (a Layer 3 file, a CONTEXT.md, a naming rule).
-2. Run `grep -r "[changed-filename]" . --include="*.md"` to find all dependents.
-3. Open each dependent CONTEXT.md and check: do its Process steps still hold given the change?
-4. Fix any embedded assumptions that are now stale — update the "Last updated" line in any file you revise.
-5. If the change cascades (fixing one CONTEXT.md means another needs updating), repeat from step 2.
+1. Identify what you changed (a reference file, a `CONTEXT.md`, a naming rule, a stage's outputs).
+2. Run `grep -r "[changed-name]" . --include="*.md"` to find everything that references it.
+3. Open each dependent and check: do its instructions still hold given the change?
+4. Fix any embedded assumptions that are now stale; update the "Last updated" line in anything you revise.
+5. If a fix introduces its own change, repeat from step 1 until the graph is consistent.
 
-**What to look for in a dependent CONTEXT.md:** Process steps that embed assumptions from the changed file; examples that are now inconsistent; constraints referencing the old version of a rule. Instructions that just say "read `voice.md`" are fine — they pick up changes automatically. It's the embedded assumptions you're hunting for.
+**What you're hunting for:** instructions that embed an assumption from the changed file; examples that are now inconsistent; constraints citing an old version of a rule. References that just say "read X" pick up changes automatically — it's the *embedded* assumptions that rot.
 
-**`_dependencies.md` — reverse map for any project:** Maintain a `_dependencies.md` at the project root listing each config file, its last-updated date, and which CONTEXT.md files depend on it. See `references/templates.md` for the template. On small projects this file is short — that is fine. The value is having an explicit map so you don't rely on grep alone to know what you might have missed.
+**`_dependencies.md` — make the graph explicit.** Maintain a reverse map at the project root: each frequently-referenced file (shared configs, contracts, conventions) listed with what depends on it and when it last changed. grep finds dependents *after* you change something; `_dependencies.md` shows the blast radius *before* you touch it. Keep it on every project — a small project just means a short file. See `references/templates.md` for the template.
 
 ## Common mistakes to design against
 
@@ -85,7 +83,7 @@ Every result is a CONTEXT.md you must review.
 - Missing Routing Table — agent guesses and wastes tokens.
 - Too many workspaces — only split on a genuine mental-mode shift.
 - Over-describing the AI persona instead of the work — describe the project, constraints, and audience.
-- Stale CONTEXT.md files after any change — run the post-change dependency check every time (see above). Don't wait for the agent to surface the problem. This applies to all projects, not just large ones.
+- Stale files after a change — anything that referenced what you changed may now embed an old assumption. Run the post-change dependency check every time (see above), on every project. Don't wait for the agent to surface the problem.
 - One flat folder of many files — once a folder holds more than ~8–10 files at one level, use subfolders/stages so the agent doesn't read everything.
 - Building the whole system before testing — ship one workspace first.
 
