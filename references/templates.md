@@ -5,7 +5,7 @@
 2. `CONTEXT.md` template (a Room)
 3. `REFERENCES.md` template (optional companion)
 4. Layer 3 config stub (stable-reference variant)
-5. `_dependencies.md` template (optional — larger projects only)
+5. `_dependencies.md` template (all projects)
 6. Full project tree examples (adapt to your context)
    - Content Creator
    - Freelancer / Agency
@@ -116,11 +116,9 @@ Use inside a workspace when there's enough passive background material that putt
 
 ---
 
-## 5. `_dependencies.md` template (optional — larger projects only)
+## 5. `_dependencies.md` template
 
-Use this when your project has five or more Layer 3 reference files and you want an explicit reverse map. Skip it on small projects — maintaining it by hand is overhead, and `grep` already does the job.
-
-Place at the project root alongside `CLAUDE.md`.
+Maintain this file in every ICM project — small or large. It gives you an explicit reverse map of which CONTEXT.md files depend on which Layer 3 files, so you don't rely on grep alone after a change. On small projects this file is short; that is fine. Place it at the project root alongside `CLAUDE.md`.
 
 ```markdown
 # Layer 3 Dependency Map
