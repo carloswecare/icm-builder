@@ -26,3 +26,7 @@ venv/
 dist/
 build/
 *.skill
+
+# Local publish tooling — never commit these
+.env
+publish.sh
