@@ -39,9 +39,9 @@ Follow this order. **Start small** — build one workspace, test it, then iterat
 2. **Write the root `CLAUDE.md` (the Map).** Identity + workspaces + naming conventions + Routing Table. Keep it under 50 lines. Use `references/templates.md`.
 3. **Create `_config/` for Layer 3 reference files** if there are stable rules (voice, style, design). Stub them; the user fills them in.
 4. **Scaffold workspaces and numbered stages.** Each stage folder gets a `CONTEXT.md` and an empty `output/`.
-5. **Write each `CONTEXT.md` (the Rooms).** Explicit Inputs / Process / Outputs. Spend ~80% of the file describing the actual work and constraints; ≤20% on agent persona/behavior. Add a `REFERENCES.md` alongside it if the workspace has substantial passive background material. Consider a "Last updated: YYYY-MM-DD" line at the top so staleness is visible at a glance.
+5. **Write each `CONTEXT.md` (the Rooms).** Explicit Inputs / Process / Outputs. Spend ~80% of the file describing the actual work and constraints; ≤20% on agent persona/behavior. Add a `REFERENCES.md` alongside it if the workspace has substantial passive background material. Include a "Last updated: YYYY-MM-DD" line at the top — it makes staleness visible at a glance. **Name every Layer 3 file explicitly in the Inputs section** (e.g. `../../_config/voice.md`, not just `_config/`) — this naming is what makes grep your dependency graph when references change.
 6. **Wire Layer 3 where needed.** If using skills/tools, add a fourth **Skills** column to the routing table and reference each skill only in the workspaces that use it. If using stable reference files, point to them from `CONTEXT.md` inputs. A project can do both.
-7. **Test, fail, and update the factory.** When the agent errs, don't just patch the final output — trace the error to the source file (a `CONTEXT.md` or a reference rule) and fix it there. Context files are living documents.
+7. **Test, fail, and update the factory.** When the agent errs, don't just patch the final output — trace the error to the source file (a `CONTEXT.md` or a reference rule) and fix it there. Context files are living documents. **Also run this proactively** whenever you update a Layer 3 file — don't wait for errors (see "Keeping Layer 3 references fresh" below).
 
 ## File templates
 
@@ -53,13 +53,36 @@ Read `references/templates.md` for ready-to-use `CLAUDE.md` and `CONTEXT.md` ske
 - **Routing Table is mandatory.** Without it the agent guesses what to read and burns tokens. Use a 3-column table: `Task | Go to | Read`. Add a 4th `Skills` column only if Layer 3 skills/tools are wired in.
 - **Outputs are edit surfaces.** Every stage writes plain-text files to its `output/`. This is what makes the system a glass box and enables the U-shaped intervention pattern (humans edit heavily at the first stage to set direction and the last stage to polish; middle stages run constrained by reference files).
 
+## Keeping Layer 3 references fresh
+
+When you update a Layer 3 reference file (`_config/voice.md`, `_config/standards.md`, etc.), every CONTEXT.md that depends on it is now silently stale. The agent follows the principle correctly — the principle is just out of date. This is the most common rot pattern in ICM projects.
+
+**The mechanism is grep.** Because each CONTEXT.md names its Layer 3 inputs explicitly by filename (Step 5), a single command finds every dependent stage:
+
+```bash
+grep -r "voice.md" . --include="*.md"
+```
+
+Every result is a CONTEXT.md you need to review.
+
+**Change propagation protocol** — run this whenever you update a Layer 3 file:
+
+1. Update the Layer 3 file.
+2. Run `grep -r "[filename]" . --include="*.md"` to find all dependents.
+3. Open each dependent CONTEXT.md and check: do its Process steps still hold given the change?
+4. Update the "Last updated" line in any CONTEXT.md you revise.
+
+**What to look for in a dependent CONTEXT.md:** Process steps that embed assumptions from the changed file; examples that are now inconsistent; constraints referencing the old version of a rule. Instructions that just say "read `voice.md`" are fine — they pick up changes automatically. It's the embedded assumptions you're hunting for.
+
+**Optional — `_dependencies.md` for larger projects:** If your project has five or more Layer 3 files, maintain a reverse map at the project root listing each config file, its last-updated date, and which CONTEXT.md files depend on it. See `references/templates.md` for the template. Skip this on small projects — it's another file that can go stale.
+
 ## Common mistakes to design against
 
 - `CLAUDE.md` too long — it's a router, not a project brief (<50 lines).
 - Missing Routing Table — agent guesses and wastes tokens.
 - Too many workspaces — only split on a genuine mental-mode shift.
 - Over-describing the AI persona instead of the work — describe the project, constraints, and audience.
-- Stale context files — update them when requirements change.
+- Stale CONTEXT.md files after a Layer 3 change — use `grep -r "[filename]" . --include="*.md"` to find dependents and review them. Don't wait for the agent to surface the problem.
 - One flat folder of many files — once a folder holds more than ~8–10 files at one level, use subfolders/stages so the agent doesn't read everything.
 - Building the whole system before testing — ship one workspace first.
 

@@ -5,7 +5,8 @@
 2. `CONTEXT.md` template (a Room)
 3. `REFERENCES.md` template (optional companion)
 4. Layer 3 config stub (stable-reference variant)
-5. Full project tree examples (adapt to your context)
+5. `_dependencies.md` template (optional — larger projects only)
+6. Full project tree examples (adapt to your context)
    - Content Creator
    - Freelancer / Agency
    - Developer
@@ -59,7 +60,8 @@ Explicit contract. ~80% of the file describes the actual work; ≤20% describes 
 
 ## Inputs
 - Layer 4 (working): ../01_research/output/
-- Layer 3 (reference): ../../_config/voice.md
+- Layer 3 (reference): ../../_config/voice.md   ← name every Layer 3 file explicitly by path;
+                                                    this is how grep finds dependents when you update a config
 
 ## Process
 1. [Concrete step — what to read.]
@@ -72,6 +74,8 @@ Explicit contract. ~80% of the file describes the actual work; ≤20% describes 
 ## Notes / constraints
 - [Audience, tone, length, anything stage-specific.]
 ```
+
+> **Why explicit paths matter:** If you later update `voice.md`, running `grep -r "voice.md" . --include="*.md"` instantly shows every CONTEXT.md that depends on it. Vague references (`"read the config"`) break this. See "Keeping Layer 3 references fresh" in `SKILL.md`.
 
 ---
 
@@ -109,6 +113,43 @@ Use inside a workspace when there's enough passive background material that putt
 ## [Section, e.g. Do / Don't]
 - TODO: [user fills in]
 ```
+
+---
+
+## 5. `_dependencies.md` template (optional — larger projects only)
+
+Use this when your project has five or more Layer 3 reference files and you want an explicit reverse map. Skip it on small projects — maintaining it by hand is overhead, and `grep` already does the job.
+
+Place at the project root alongside `CLAUDE.md`.
+
+```markdown
+# Layer 3 Dependency Map
+> Last full audit: YYYY-MM-DD
+
+When you update a Layer 3 file, run:
+  grep -r "[filename]" . --include="*.md"
+Then review every CONTEXT.md in the results and update its "Last updated" line.
+
+---
+
+## _config/voice.md
+Last updated: YYYY-MM-DD — [one-line summary of what changed]
+
+Depends on this file:
+- script-lab/01_research/CONTEXT.md
+- script-lab/02_script/CONTEXT.md
+- distribution/CONTEXT.md
+
+---
+
+## _config/platforms.md
+Last updated: YYYY-MM-DD — [one-line summary of what changed]
+
+Depends on this file:
+- distribution/CONTEXT.md
+```
+
+> **Keep it short.** One entry per Layer 3 file. No nested checklists — the review happens in the CONTEXT.md files themselves, not here. This file is a lookup, not a task tracker.
 
 ---
 
